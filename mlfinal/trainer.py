@@ -5,7 +5,7 @@ from dataclasses import asdict
 from .config import Config
 from .data import build_dataset
 from .model import DecoderOnlyTransformer
-from .utils import set_seed, plot_training_curves, build_optimizer
+from .utils import set_seed, plot_training_curves, build_optimizer, save_tsne_head
 
 def train_loop(cfg: Config):
     set_seed(cfg.seed)
@@ -13,6 +13,8 @@ def train_loop(cfg: Config):
     train_data, val_data, vocab = build_dataset(cfg)
     if cfg.batch_size == 0:
         cfg.batch_size = min(512, max(1, train_data.size(0) // 2))
+    if cfg.full_batch:
+        cfg.batch_size = train_data.size(0)
     model = DecoderOnlyTransformer(
         vocab_size=vocab.vocab_size,
         d_model=cfg.d_model,
@@ -34,7 +36,7 @@ def train_loop(cfg: Config):
     def batch_from(data: torch.Tensor, batch_size: int) -> torch.Tensor:
         idx = torch.randint(0, data.size(0), (batch_size,))
         return data[idx]
-    def evaluate(data: torch.Tensor, max_samples: int = None) -> float:
+    def evaluate(data: torch.Tensor, max_samples: int = None):
         model.eval()
         with torch.no_grad():
             if max_samples is not None and data.size(0) > max_samples:
@@ -48,10 +50,11 @@ def train_loop(cfg: Config):
             logits = model(torch.cat([x, dummy_token], dim=1))
             pred = logits[:, 4, :].argmax(dim=-1)
             acc = (pred == y).float().mean().item()
-        return acc
+            loss = criterion(logits[:, 4, :], y).item()
+        return acc, loss
     best_val_acc = 0.0
     best_state = None
-    eval_interval = 10
+    eval_interval = cfg.eval_interval if cfg.eval_interval and cfg.eval_interval > 0 else max(100, cfg.steps // 100)
     history = {
         'steps': [],
         'losses': [],
@@ -68,16 +71,29 @@ def train_loop(cfg: Config):
         opt.zero_grad(set_to_none=True)
         dummy_token = torch.full((x.size(0), 1), vocab.eq_id, dtype=torch.long, device=cfg.device)
         input_seq = torch.cat([x, dummy_token], dim=1)
+        if cfg.weight_noise_std > 0.0:
+            for p in model.parameters():
+                p.data.add_(torch.randn_like(p) * cfg.weight_noise_std)
         logits = model(input_seq)
         pred_last = logits[:, 4, :]
         loss = criterion(pred_last, y)
         loss.backward()
+        if cfg.grad_noise_std > 0.0:
+            for p in model.parameters():
+                if p.grad is not None:
+                    p.grad.add_(torch.randn_like(p) * cfg.grad_noise_std)
+        if cfg.decay_to_init and cfg.decay_to_init_lambda > 0.0:
+            if 'init_params' not in locals():
+                init_params = [q.detach().clone() for q in model.parameters()]
+            for p, p0 in zip(model.parameters(), init_params):
+                if p.grad is not None:
+                    p.grad.add_((p.data - p0) * cfg.decay_to_init_lambda)
         if cfg.grad_clip > 0.0:
             nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
         opt.step()
         if (step + 1) % eval_interval == 0 or step == cfg.steps - 1:
-            acc_tr = evaluate(train_data, max_samples=4096)
-            acc_val = evaluate(val_data)
+            acc_tr, loss_tr = evaluate(train_data, max_samples=4096)
+            acc_val, loss_val = evaluate(val_data)
             history['steps'].append(step + 1)
             history['losses'].append(loss.item())
             history['train_accs'].append(acc_tr)
@@ -88,7 +104,6 @@ def train_loop(cfg: Config):
                     "model": model.state_dict(),
                     "cfg": asdict(cfg),
                     "vocab": {
-                        "p": vocab.p,
                         "vocab_size": vocab.vocab_size,
                         "num_size": vocab.num_size,
                     },
@@ -106,3 +121,7 @@ def train_loop(cfg: Config):
     if len(history['steps']) > 0:
         plot_training_curves(history, cfg.out_dir)
         print(f"训练曲线已保存: {os.path.join(cfg.out_dir, 'training_curves.png')}")
+    if cfg.tsne:
+        path = save_tsne_head(model, cfg.out_dir, cfg.tsne_perplexity, cfg.tsne_n_iter)
+        if path:
+            print(f"t-SNE 嵌入已保存: {path}")

@@ -6,6 +6,12 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import numpy as np
+try:
+    from sklearn.manifold import TSNE
+    _HAS_SKLEARN = True
+except Exception:
+    _HAS_SKLEARN = False
 
 def set_seed(seed: int):
     import random
@@ -38,4 +44,23 @@ def plot_training_curves(history: dict, out_dir: str):
     plt.close()
 
 def build_optimizer(model: nn.Module, cfg):
+    if cfg.optimizer.lower() == "adam":
+        return optim.Adam(model.parameters(), lr=cfg.lr, betas=(0.9, 0.98), weight_decay=0.0)
     return optim.AdamW(model.parameters(), lr=cfg.lr, betas=(0.9, 0.98), weight_decay=cfg.weight_decay)
+
+def save_tsne_head(model: nn.Module, out_dir: str, perplexity: float, n_iter: int):
+    try:
+        if not _HAS_SKLEARN:
+            return None
+        W = model.head.weight.detach().cpu().numpy()
+        tsne = TSNE(n_components=2, perplexity=perplexity, n_iter=n_iter, learning_rate='auto', init='random')
+        Z = tsne.fit_transform(W)
+        import matplotlib.pyplot as plt
+        plt.figure(figsize=(6, 6))
+        plt.scatter(Z[:, 0], Z[:, 1], s=10, alpha=0.8)
+        path = os.path.join(out_dir, 'tsne_head.png')
+        plt.savefig(path, dpi=150, bbox_inches='tight')
+        plt.close()
+        return path
+    except Exception:
+        return None
