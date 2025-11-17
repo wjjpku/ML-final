@@ -1,0 +1,27 @@
+# Outputs and experiment artifacts
+outputs/
+outputs/**
+runs/
+checkpoints/
+
+# Logs
+logs/
+*.log
+*.out
+*.err
+
+# Datasets and generated data
+data/
+datasets/
+*.npz
+*.npy
+*.csv
+*.tsv
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS/filesystem noise
+.DS_Store
+Thumbs.db

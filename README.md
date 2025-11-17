@@ -6,36 +6,34 @@
  - Kairui Li
  - Kehan Huang
 
-好的，以下是更详细且完整的复现技术细节，直接列出所有关键信息，避免引用附录：
-
 ---
 
 ### **1. 数据集**
 #### **数据生成**
-- 数据集由二元运算表组成，形式为 \(a \circ b = c\)，其中 \(a, b, c\) 是离散符号，\(\circ\) 是二元运算。
+- 数据集由二元运算表组成，形式为 $a \circ b = c$，其中 $a, b, c$ 是离散符号，$\circ$ 是二元运算。
 - 使用的二元运算包括：
-  1. \(x \circ y = x + y \ (\text{mod}\ p)\)，其中 \(0 \leq x, y < p\)。
-  2. \(x \circ y = x - y \ (\text{mod}\ p)\)，其中 \(0 \leq x, y < p\)。
-  3. \(x \circ y = x / y \ (\text{mod}\ p)\)，其中 \(0 \leq x < p\)，\(0 < y < p\)。
-  4. \(x \circ y = [x / y \ (\text{mod}\ p)\ \text{if}\ y\ \text{is odd},\ \text{otherwise}\ x - y \ (\text{mod}\ p)]\)。
-  5. \(x \circ y = x^2 + y^2 \ (\text{mod}\ p)\)，其中 \(0 \leq x, y < p\)。
-  6. \(x \circ y = x^2 + xy + y^2 \ (\text{mod}\ p)\)，其中 \(0 \leq x, y < p\)。
-  7. \(x \circ y = x^2 + xy + y^2 + x \ (\text{mod}\ p)\)，其中 \(0 \leq x, y < p\)。
-  8. \(x \circ y = x^3 + xy \ (\text{mod}\ p)\)，其中 \(0 \leq x, y < p\)。
-  9. \(x \circ y = x^3 + xy^2 + y \ (\text{mod}\ p)\)，其中 \(0 \leq x, y < p\)。
-  10. \(x \circ y = x \cdot y\)，其中 \(x, y \in S_5\)（对称群）。
-  11. \(x \circ y = x \cdot y \cdot x^{-1}\)，其中 \(x, y \in S_5\)。
-  12. \(x \circ y = x \cdot y \cdot x\)，其中 \(x, y \in S_5\)。
+  1. $x \circ y = (x + y) \mod p$，其中 $0 \leq x, y < p$。
+  2. $x \circ y = (x - y) \mod p$，其中 $0 \leq x, y < p$。
+  3. $x \circ y = x / y \mod p$，其中 $0 \leq x < p$，$0 < y < p$。
+  4. $x \circ y = [\,x / y \mod p\ \text{ if } y \text{ is odd },\ \text{ otherwise } x - y \mod p\,]$。
+  5. $x \circ y = x^2 + y^2 \mod p$，其中 $0 \leq x, y < p$。
+  6. $x \circ y = x^2 + xy + y^2 \mod p$，其中 $0 \leq x, y < p$。
+  7. $x \circ y = x^2 + xy + y^2 + x \mod p$，其中 $0 \leq x, y < p$。
+  8. $x \circ y = x^3 + xy \mod p$，其中 $0 \leq x, y < p$。
+  9. $x \circ y = x^3 + xy^2 + y \mod p$，其中 $0 \leq x, y < p$。
+  10. $x \circ y = x \cdot y$，其中 $x, y \in S_5$（对称群）。
+  11. $x \circ y = x \cdot y \cdot x^{-1}$，其中 $x, y \in S_5$。
+  12. $x \circ y = x \cdot y \cdot x$，其中 $x, y \in S_5$。
 
-- **模数 \(p\)**：在实验中使用 \(p = 97\)。
+- **模数 $p$**：在实验中使用 $p = 97$。
 
 #### **数据划分**
 - 从所有可能的方程中随机选择一部分作为训练集，其余作为验证集。
 - 训练集的比例可以是 50%、30%、25% 等，具体比例会影响模型的泛化能力。
 
 #### **符号表示**
-- 每个符号（包括 \(a, b, c, \circ, =\)）都被表示为独立的 token。
-- 数据集中的每个方程形式为 \(⟨x⟩⟨op⟩⟨y⟩⟨=⟩⟨x \circ y⟩\)，其中 \(⟨a⟩\) 表示对应元素 \(a\) 的 token。
+- 每个符号（包括 $a, b, c, \circ, =$）都被表示为独立的 token。
+- 数据集中的每个方程形式为 $⟨x⟩⟨op⟩⟨y⟩⟨=⟩⟨x \circ y⟩$，其中 $⟨a⟩$ 表示对应元素 $a$ 的 token。
 
 ---
 
@@ -55,7 +53,7 @@
   - AdamW 的默认设置：
     - 学习率：10⁻³
     - 权重衰减：1
-    - 超参数 \(\beta_1 = 0.9\)，\(\beta_2 = 0.98\)
+- 超参数 $\beta_1 = 0.9$，$\beta_2 = 0.98$
     - 学习率预热：线性预热，前 10 次更新
     - 小批量大小：512 或训练集大小的一半（取较小值）
     - 优化步数：10⁵ 步
@@ -107,18 +105,14 @@
 
 ---
 
-通过以上详细的技术细节，你可以完整地复现论文中的实验，并探索神经网络在小算法数据集上的泛化行为。
-
----
-
 ### **项目架构**
 - 入口脚本：`train.py`（解析命令行参数并启动训练）
 - 模块目录：`mlfinal/`
-  - `config.py`：配置数据类 `Config`（c:\Users\33235\Desktop\机器学习数学导引作业\ML-final\mlfinal\config.py:4）
-  - `data.py`：数据与词表，支持模运算与 `S5` 群（c:\Users\33235\Desktop\机器学习数学导引作业\ML-final\mlfinal\data.py:93）
-  - `model.py`：解码器-only Transformer（c:\Users\33235\Desktop\机器学习数学导引作业\ML-final\mlfinal\model.py:1）
-  - `utils.py`：优化器构建、训练曲线、t-SNE 可视化（c:\Users\33235\Desktop\机器学习数学导引作业\ML-final\mlfinal\utils.py:1）
-  - `trainer.py`：训练与评估主循环（c:\Users\33235\Desktop\机器学习数学导引作业\ML-final\mlfinal\trainer.py:10）
+  - `config.py`：配置数据类 `Config`（.\mlfinal\config.py:4）
+  - `data.py`：数据与词表，支持模运算与 `S5` 群（.\mlfinal\data.py:93）
+  - `model.py`：解码器-only Transformer（.\mlfinal\model.py:1）
+  - `utils.py`：优化器构建、训练曲线、t-SNE 可视化（.\mlfinal\utils.py:1）
+  - `trainer.py`：训练与评估主循环（.\mlfinal\trainer.py:10）
 
 ### **使用方法**
 - 快速运行：`python train.py --op mod_add --steps 3000 --target-val-acc 0.90`
@@ -132,9 +126,9 @@
 - 依赖安装：`pip install torch matplotlib`，可选 t-SNE：`pip install scikit-learn`
 
 ### **支持的运算**
-- 模运算（`p=97`）：加、减、除、奇偶分支、若干多项式组合（c:\Users\33235\Desktop\机器学习数学导引作业\ML-final\mlfinal\data.py:28）
-- 群运算：`S5` 的乘法、共轭、`x·y·x`（c:\Users\33235\Desktop\机器学习数学导引作业\ML-final\mlfinal\data.py:65）
-- 统一样本格式：`⟨x⟩⟨op⟩⟨y⟩⟨=⟩⟨x∘y⟩`，仅监督最后一位（c:\Users\33235\Desktop\机器学习数学导引作业\ML-final\mlfinal\trainer.py:72）
+- 模运算（`p=97`）：加、减、除、奇偶分支、若干多项式组合（.\mlfinal\data.py:28）
+- 群运算：`S5` 的乘法、共轭、`x·y·x`（.\mlfinal\data.py:65）
+- 统一样本格式：`⟨x⟩⟨op⟩⟨y⟩⟨=⟩⟨x∘y⟩`，仅监督最后一位（.\mlfinal\trainer.py:72）
 
 ### **关键超参数**
 - 数据：`--p`、`--train-ratio`、`--op`
@@ -145,11 +139,11 @@
 - 可视化：`--tsne` 或 `--no-tsne`
 
 ### **原理要点**
-- 序列建模思路：将二元运算表转为长度 5 的短序列，最后一位为监督目标，避免不必要的语言损失污染（c:\Users\33235\Desktop\机器学习数学导引作业\ML-final\mlfinal\trainer.py:78）
-- 因果注意力：下三角掩码，确保第 5 位的预测仅依赖前 4 位输入（c:\Users\33235\Desktop\机器学习数学导引作业\ML-final\mlfinal\model.py:17）
-- 训练/评估一致：训练时与评估时都以等号 token 作为占位输入第 5 位（c:\Users\33235\Desktop\机器学习数学导引作业\ML-final\mlfinal\trainer.py:72, c:\Users\33235\Desktop\机器学习数学导引作业\ML-final\mlfinal\trainer.py:49）
-- 优化与正则：支持 Adam/AdamW、线性预热、梯度裁剪、梯度与权重噪声、向初始化点衰减，覆盖 README 中主要实验设置（c:\Users\33235\Desktop\机器学习数学导引作业\ML-final\mlfinal\trainer.py:81, c:\Users\33235\Desktop\机器学习数学导引作业\ML-final\mlfinal\utils.py:23）
-- 嵌入分析：输出层权重 t-SNE，直观观察模型学习到的结构（c:\Users\33235\Desktop\机器学习数学导引作业\ML-final\mlfinal\utils.py:27）
+- 序列建模思路：将二元运算表转为长度 5 的短序列，最后一位为监督目标，避免不必要的语言损失污染（.\mlfinal\trainer.py:78）
+- 因果注意力：下三角掩码，确保第 5 位的预测仅依赖前 4 位输入（.\mlfinal\model.py:17）
+- 训练/评估一致：训练时与评估时都以等号 token 作为占位输入第 5 位（.\mlfinal\trainer.py:72, .\mlfinal\trainer.py:49）
+- 优化与正则：支持 Adam/AdamW、线性预热、梯度裁剪、梯度与权重噪声、向初始化点衰减，覆盖 README 中主要实验设置（.\mlfinal\trainer.py:81, .\mlfinal\utils.py:23）
+- 嵌入分析：输出层权重 t-SNE，直观观察模型学习到的结构（.\mlfinal\utils.py:27）
 
 ### **常见问题**
 - OpenMP 冲突：如出现 `libiomp5md.dll` 重复初始化，代码已设置环境变量自动绕过（`mlfinal/utils.py`）；仍建议统一依赖版本。
