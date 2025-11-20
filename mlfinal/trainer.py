@@ -109,7 +109,9 @@ def train_loop(cfg: Config):
                     },
                 }
             print(f"Step {step+1:06d} | Train Acc {acc_tr:.4f} | Val Acc {acc_val:.4f} | Loss {loss.item():.4f}")
-            plot_training_curves(history, cfg.out_dir)
+            if cfg.plot_interval and (step + 1) % cfg.plot_interval == 0:
+                plot_path = plot_training_curves(history, cfg.out_dir, cfg, step=step+1, note=cfg.plot_note)
+                print(f"训练曲线已保存: {plot_path}")
             if acc_val >= cfg.target_val_acc:
                 print(f"Validation accuracy {acc_val:.4f} reached {cfg.target_val_acc:.2f}%. Stopping training.")
                 break
@@ -119,8 +121,8 @@ def train_loop(cfg: Config):
         print(f"最佳模型已保存: {save_path}")
         print(f"最佳验证准确率: {best_val_acc:.4f}")
     if len(history['steps']) > 0:
-        plot_training_curves(history, cfg.out_dir)
-        print(f"训练曲线已保存: {os.path.join(cfg.out_dir, 'training_curves.png')}")
+        plot_path = plot_training_curves(history, cfg.out_dir, cfg, step='final', note=cfg.plot_note)
+        print(f"训练曲线已保存: {plot_path}")
     if cfg.tsne:
         path = save_tsne_head(model, cfg.out_dir, cfg.tsne_perplexity, cfg.tsne_n_iter)
         if path:

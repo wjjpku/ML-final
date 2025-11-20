@@ -14,7 +14,7 @@
 - 使用的二元运算包括：
   1. $x \circ y = (x + y) \mod p$，其中 $0 \leq x, y < p$。
   2. $x \circ y = (x - y) \mod p$，其中 $0 \leq x, y < p$。
-  3. $x \circ y = x / y \mod p$，其中 $0 \leq x < p$，$0 < y < p$。
+  3. $x \circ y = x / y \mod p$，其中 $0 \leq x < p, 0 < y < p$。
   4. $x \circ y = [\,x / y \mod p\ \text{ if } y \text{ is odd },\ \text{ otherwise } x - y \mod p\,]$。
   5. $x \circ y = x^2 + y^2 \mod p$，其中 $0 \leq x, y < p$。
   6. $x \circ y = x^2 + xy + y^2 \mod p$，其中 $0 \leq x, y < p$。
@@ -124,6 +124,12 @@
   - 权重噪声：`python train.py --op mod_add --steps 100000 --weight-noise-std 0.01`
   - 学习率变体：`python train.py --op mod_add --lr 3e-4` 或 `--lr 3e-3`
 - 依赖安装：`pip install torch matplotlib`，可选 t-SNE：`pip install scikit-learn`
+
+### **Jupyter Notebook**
+- 可视化与汇总：打开 `experiments.ipynb`，按顺序运行各单元以：
+  - 运行多种运算的短训练并绘制 Loss/Accuracy 曲线
+  - 进行输出层权重的 t-SNE 可视化（如安装了 `scikit-learn`）
+  - 在项目根目录启动可直接引用模块 `mlfinal/*`
 
 ### **支持的运算**
 - 模运算（`p=97`）：加、减、除、奇偶分支、若干多项式组合（.\mlfinal\data.py:28）

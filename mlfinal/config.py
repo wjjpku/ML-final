@@ -27,6 +27,8 @@ class Config:
     tsne: bool = True
     tsne_perplexity: float = 30.0
     tsne_n_iter: int = 1000
+    plot_note: str = ""
+    plot_interval: int = 0
     seed: int = 42
     out_dir: str = "outputs"
     device: str = "cuda" if torch.cuda.is_available() else "cpu"

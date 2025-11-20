@@ -30,6 +30,8 @@ def main():
     parser.add_argument('--eval-interval', type=int)
     parser.add_argument('--tsne', action='store_true')
     parser.add_argument('--no-tsne', dest='tsne', action='store_false')
+    parser.add_argument('--plot-note', type=str)
+    parser.add_argument('--plot-interval', type=int)
     parser.add_argument('--seed', type=int)
     parser.add_argument('--out-dir', type=str)
     args = parser.parse_args()
@@ -56,6 +58,8 @@ def main():
         decay_to_init_lambda=args.decay_to_init_lambda if args.decay_to_init_lambda is not None else 0.0,
         eval_interval=args.eval_interval if args.eval_interval is not None else 0,
         tsne=args.tsne if args.tsne is not None else True,
+        plot_note=args.plot_note if args.plot_note is not None else "",
+        plot_interval=args.plot_interval if args.plot_interval is not None else 0,
         seed=args.seed if args.seed is not None else 42,
         out_dir=args.out_dir if args.out_dir is not None else "outputs",
     )

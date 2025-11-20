@@ -19,9 +19,9 @@ def set_seed(seed: int):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
 
-def plot_training_curves(history: dict, out_dir: str):
+def plot_training_curves(history: dict, out_dir: str, cfg=None, step=None, note: str = ""):
     if len(history['steps']) == 0:
-        return
+        return None
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
     axes[0].plot(history['steps'], history['losses'], 'b-', label='Loss', linewidth=2)
     axes[0].set_xlabel('Step', fontsize=12)
@@ -38,10 +38,26 @@ def plot_training_curves(history: dict, out_dir: str):
     axes[1].grid(True, alpha=0.3)
     axes[1].legend(fontsize=11)
     axes[1].set_ylim([0, 1.05])
+    title = None
+    if cfg is not None:
+        title = f"op={cfg.op} p={cfg.p} train_ratio={cfg.train_ratio}"
+    if note:
+        if title:
+            title = title + " | " + note
+        else:
+            title = note
+    if title:
+        fig.suptitle(title)
     plt.tight_layout()
-    plot_path = os.path.join(out_dir, 'training_curves.png')
+    suffix = str(step) if step is not None else "final"
+    if cfg is not None:
+        base = f"training_curves_{cfg.op}_p{cfg.p}_tr{cfg.train_ratio}_{suffix}.png"
+    else:
+        base = f"training_curves_{suffix}.png"
+    plot_path = os.path.join(out_dir, base)
     plt.savefig(plot_path, dpi=150, bbox_inches='tight')
     plt.close()
+    return plot_path
 
 def build_optimizer(model: nn.Module, cfg):
     if cfg.optimizer.lower() == "adam":

@@ -3,6 +3,7 @@ outputs/
 outputs/**
 runs/
 checkpoints/
+\.ipynb_checkpoints/
 
 # Logs
 logs/
