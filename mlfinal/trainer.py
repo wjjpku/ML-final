@@ -113,6 +113,8 @@ def train_loop(cfg: Config):
                 plot_path = plot_training_curves(history, cfg.out_dir, cfg, step=step+1, note=cfg.plot_note)
                 if plot_path:
                     print(f"训练曲线已保存: {plot_path}")
+                else:
+                    print('未找到保存位置，保存训练曲线失败')
             if acc_val >= cfg.target_val_acc:
                 print(f"Validation accuracy {acc_val:.4f} reached {cfg.target_val_acc:.2f}%. Stopping training.")
                 break
