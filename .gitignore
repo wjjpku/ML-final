@@ -4,6 +4,7 @@ outputs/**
 runs/
 checkpoints/
 \.ipynb_checkpoints/
+outputs_new/
 
 # Logs
 logs/
