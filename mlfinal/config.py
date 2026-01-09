@@ -26,11 +26,10 @@ class Config:
     decay_to_init: bool = False
     decay_to_init_lambda: float = 0.0
     eval_interval: int = 20
-    tsne: bool = True
-    tsne_perplexity: float = 30.0
-    tsne_n_iter: int = 1000
+    enable_visualization: bool = True  # 是否启用可视化（Loss曲线）
     plot_note: str = ""
     plot_interval: int = 0
+    data_storage_dir: str = None  # 数据存储目录
     seed: int = 42
     out_dir: str = "outputs"
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
