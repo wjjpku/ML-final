@@ -5,6 +5,7 @@ runs/
 checkpoints/
 \.ipynb_checkpoints/
 outputs_new/
+data_storage/
 
 # Logs
 logs/
