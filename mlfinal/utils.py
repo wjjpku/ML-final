@@ -70,12 +70,12 @@ def _add_step_to_suffix(suffix: str, step) -> str:
 
 def plot_training_curves(history: dict, out_dir: str, cfg=None, step=None, note: str = ""):
     """
-    绘制训练曲线（损失和准确率）
+    绘制训练曲线（损失和准确率），横轴为指数刻度
     
     文件名格式: training_curves__op_pX__k_Y__train_ratio_Z__architecture__optimizer__[note__]step_S.png
     
     Args:
-        history: 包含训练历史的字典
+        history: 包含训练历史的字典 {'steps': [...], 'losses': [...], 'train_accs': [...], 'val_accs': [...]}
         out_dir: 输出目录
         cfg: 配置对象，用于生成文件名后缀
         step: 当前步数（可选，用于动态保存）
@@ -98,22 +98,31 @@ def plot_training_curves(history: dict, out_dir: str, cfg=None, step=None, note:
     
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
     
-    axes[0].plot(history['steps'], history['losses'], 'b-', label='Loss', linewidth=2)
-    axes[0].set_xlabel('Step', fontsize=12)
-    axes[0].set_ylabel('Loss', fontsize=12)
-    axes[0].set_title('Training Loss', fontsize=14, fontweight='bold')
-    axes[0].grid(True, alpha=0.3)
-    axes[0].legend(fontsize=11)
-    axes[0].set_yscale('log')
+    steps = np.array(history['steps'])
+    losses = np.array(history['losses'])
+    train_accs = np.array(history['train_accs'])
+    val_accs = np.array(history['val_accs'])
     
-    axes[1].plot(history['steps'], history['train_accs'], 'g-', label='Train Acc', linewidth=2)
-    axes[1].plot(history['steps'], history['val_accs'], 'r-', label='Val Acc', linewidth=2)
-    axes[1].set_xlabel('Step', fontsize=12)
+    # ===== 左图：损失曲线（双对数刻度：横轴指数，纵轴对数）=====
+    axes[0].plot(steps, losses, 'b-', label='Loss', linewidth=2)
+    axes[0].set_xlabel('Step (log scale)', fontsize=12)
+    axes[0].set_ylabel('Loss (log scale)', fontsize=12)
+    axes[0].set_title('Training Loss', fontsize=14, fontweight='bold')
+    axes[0].grid(True, alpha=0.3, which='both')
+    axes[0].legend(fontsize=11)
+    axes[0].set_xscale('log')  # 横轴指数刻度
+    axes[0].set_yscale('log')  # 纵轴对数刻度
+    
+    # ===== 右图：准确率曲线（横轴指数，纵轴线性）=====
+    axes[1].plot(steps, train_accs, 'g-', label='Train Acc', linewidth=2)
+    axes[1].plot(steps, val_accs, 'r-', label='Val Acc', linewidth=2)
+    axes[1].set_xlabel('Step (log scale)', fontsize=12)
     axes[1].set_ylabel('Accuracy', fontsize=12)
     axes[1].set_title('Training and Validation Accuracy', fontsize=14, fontweight='bold')
-    axes[1].grid(True, alpha=0.3)
+    axes[1].grid(True, alpha=0.3, which='both')
     axes[1].legend(fontsize=11)
     axes[1].set_ylim([0, 1.05])
+    axes[1].set_xscale('log')  # 横轴指数刻度
     
     plt.tight_layout()
     filepath = os.path.join(out_dir, filename)
