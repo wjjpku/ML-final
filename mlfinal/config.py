@@ -5,6 +5,7 @@ import torch
 class Config:
     p: int = 97
     op: str = "mod_add"
+    k: int = 2  # 新增：运算的元数（变量数量）
     train_ratio: float = 0.4
     architecture: str = "transformer"  # 新增：模型架构
     d_model: int = 128
