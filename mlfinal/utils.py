@@ -1,11 +1,10 @@
 import os
-os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
 import random
 try:
     from sklearn.manifold import TSNE
@@ -14,86 +13,57 @@ except Exception:
     _HAS_SKLEARN = False
 
 def set_seed(seed: int):
-    random.seed(seed)
+    """设置随机种子以确保可重复性"""
     torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 def _build_vis_suffix(cfg=None) -> str:
-    """
-    构建可视化文件后缀，包含所有相关参数信息
-    
-    格式: op_pX__k_Y__train_ratio_Z__architecture__optimizer__[note__]
-    例如: mod_add_p97__k_2__train_ratio_0.4__transformer__adamw__exp1
-    """
+    """构建可视化文件名后缀"""
     if cfg is None:
         return ""
     
-    # 构建基础信息：操作、模数和元数
-    k = getattr(cfg, 'k', 2)
-    op_info = f"{cfg.op}_p{cfg.p}__k_{k}"
+    suffix = f"_op{cfg.op}_p{cfg.p}_k{cfg.k}"
     
-    # 构建训练比例信息
-    train_ratio_info = f"train_ratio_{cfg.train_ratio}"
+    if cfg.plot_note:
+        suffix += f"_{cfg.plot_note}"
     
-    # 构建架构和优化器信息
-    architecture = getattr(cfg, 'architecture', 'transformer').lower()
-    optimizer = getattr(cfg, 'optimizer', 'adamw').lower()
-    
-    # 构建 note 信息（如果存在）
-    note = getattr(cfg, 'plot_note', "").lower().strip()
-    
-    # 拼接所有部分
-    suffix_parts = [op_info, train_ratio_info, architecture, optimizer]
-    
-    # 添加 note（如果不为空）
-    if note:
-        suffix_parts.append(note)
-    
-    return "__" + "__".join(suffix_parts)
-
-
-def _add_step_to_suffix(suffix: str, step) -> str:
-    """
-    将步数信息添加到后缀末尾
-    
-    Args:
-        suffix: 已有的后缀
-        step: 当前步数（可以是整数或字符串如'final'）
-    
-    Returns:
-        添加了步数的后缀
-    """
-    if step is not None:
-        suffix += f"__step_{step}"
     return suffix
 
-
-def plot_training_curves(history: dict, out_dir: str, cfg=None, step=None, note: str = ""):
-    """
-    绘制训练曲线（损失和准确率），横轴为指数刻度
+def _add_step_to_suffix(suffix: str, step) -> str:
+    """在后缀中添加步数信息"""
+    if step is None or step == 'final':
+        step_str = '_final'
+    else:
+        step_str = f'_step{step}'
     
-    文件名格式: training_curves__op_pX__k_Y__train_ratio_Z__architecture__optimizer__[note__]step_S.png
+    return suffix + step_str
+
+def plot_training_curves(history, storage_manager, cfg=None, step=None):
+    """
+    绘制训练曲线（Loss和Accuracy）
     
     Args:
-        history: 包含训练历史的字典 {'steps': [...], 'losses': [...], 'train_accs': [...], 'val_accs': [...]}
-        out_dir: 输出目录
-        cfg: 配置对象，用于生成文件名后缀
-        step: 当前步数（可选，用于动态保存）
-        note: 额外的注释信息（已弃用，由 cfg.plot_note 提供）
+        history (dict): 训练历史 {'steps': [...], 'losses': [...], 'train_accs': [...], 'val_accs': [...]}
+        storage_manager: DataStorageManager 对象，用于获取保存目录
+        cfg: 配置对象
+        step: 当前步数或'final'
     
     Returns:
-        保存文件的路径，如果未保存则返回None
+        保存文件的路径，如果未保存则返回 None
     """
     if len(history['steps']) == 0:
         return None
     
-    # 构建文件名后缀
+    # 使用 storage_manager 提供的目录作为输出目录
+    out_dir = storage_manager.get_data_dir()
+    os.makedirs(out_dir, exist_ok=True)
+    
+    # 构建文件名
     vis_suffix = _build_vis_suffix(cfg)
-    
-    # 添加步数信息
     vis_suffix = _add_step_to_suffix(vis_suffix, step)
-    
-    # 构建完整文件名
     filename = f"training_curves{vis_suffix}.png"
     
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
@@ -103,17 +73,17 @@ def plot_training_curves(history: dict, out_dir: str, cfg=None, step=None, note:
     train_accs = np.array(history['train_accs'])
     val_accs = np.array(history['val_accs'])
     
-    # ===== 左图：损失曲线（双对数刻度：横轴指数，纵轴对数）=====
+    # 左图：损失曲线（双对数刻度）
     axes[0].plot(steps, losses, 'b-', label='Loss', linewidth=2)
     axes[0].set_xlabel('Step (log scale)', fontsize=12)
     axes[0].set_ylabel('Loss (log scale)', fontsize=12)
     axes[0].set_title('Training Loss', fontsize=14, fontweight='bold')
     axes[0].grid(True, alpha=0.3, which='both')
     axes[0].legend(fontsize=11)
-    axes[0].set_xscale('log')  # 横轴指数刻度
-    axes[0].set_yscale('log')  # 纵轴对数刻度
+    axes[0].set_xscale('log')
+    axes[0].set_yscale('log')
     
-    # ===== 右图：准确率曲线（横轴指数，纵轴线性）=====
+    # 右图：准确率曲线（半对数刻度）
     axes[1].plot(steps, train_accs, 'g-', label='Train Acc', linewidth=2)
     axes[1].plot(steps, val_accs, 'r-', label='Val Acc', linewidth=2)
     axes[1].set_xlabel('Step (log scale)', fontsize=12)
@@ -122,7 +92,7 @@ def plot_training_curves(history: dict, out_dir: str, cfg=None, step=None, note:
     axes[1].grid(True, alpha=0.3, which='both')
     axes[1].legend(fontsize=11)
     axes[1].set_ylim([0, 1.05])
-    axes[1].set_xscale('log')  # 横轴指数刻度
+    axes[1].set_xscale('log')
     
     plt.tight_layout()
     filepath = os.path.join(out_dir, filename)
@@ -185,39 +155,39 @@ def save_tsne_head(model: nn.Module, out_dir: str, cfg=None, perplexity: float =
     print(f"保存 t-SNE 可视化: {filepath}")
     return filepath
 
-def build_optimizer(model: nn.Module, cfg):
+def build_optimizer(model, cfg):
     """
     构建优化器
     
     Args:
-        model: 神经网络模型
+        model: 模型
         cfg: 配置对象
     
     Returns:
-        优化器实例
+        优化器对象
     """
-    optimizer_name = cfg.optimizer.lower()
+    optimizer_type = cfg.optimizer.lower()
     
-    if optimizer_name == "adamw":
-        return torch.optim.AdamW(
+    if optimizer_type == 'adamw':
+        optimizer = torch.optim.AdamW(
             model.parameters(),
             lr=cfg.lr,
-            weight_decay=cfg.weight_decay,
-            betas=(0.9, 0.98)
+            weight_decay=cfg.weight_decay
         )
-    elif optimizer_name == "adam":
-        return torch.optim.Adam(
+    elif optimizer_type == 'adam':
+        optimizer = torch.optim.Adam(
             model.parameters(),
             lr=cfg.lr,
-            weight_decay=cfg.weight_decay,
-            betas=(0.9, 0.98)
+            weight_decay=cfg.weight_decay
         )
-    elif optimizer_name == "sgd":
-        return torch.optim.SGD(
+    elif optimizer_type == 'sgd':
+        optimizer = torch.optim.SGD(
             model.parameters(),
             lr=cfg.lr,
             weight_decay=cfg.weight_decay,
             momentum=0.9
         )
     else:
-        raise ValueError(f"不支持的优化器: {cfg.optimizer}")
+        raise ValueError(f"不支持的优化器类型: {optimizer_type}")
+    
+    return optimizer
