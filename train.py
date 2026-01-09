@@ -10,10 +10,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--p', type=int)
     parser.add_argument('--op', type=str)
+    parser.add_argument('--k', type=int, 
+                        help='运算的元数（变量数量），默认为2（二元运算）')
     parser.add_argument('--train-ratio', type=float)
     parser.add_argument('--architecture', type=str, 
                         choices=get_supported_architectures(),
-                        help='模型架构: transformer, mlp, lstm, gru')  # 新增
+                        help='模型架构: transformer, mlp, lstm, gru')
     parser.add_argument('--d-model', type=int)
     parser.add_argument('--n-layers', type=int)
     parser.add_argument('--n-heads', type=int)
@@ -42,8 +44,9 @@ def main():
     cfg = Config(
         p=args.p if args.p is not None else 97,
         op=args.op if args.op is not None else "mod_add",
+        k=args.k if args.k is not None else 2,
         train_ratio=args.train_ratio if args.train_ratio is not None else 0.4,
-        architecture=args.architecture if args.architecture is not None else "transformer",  # 新增
+        architecture=args.architecture if args.architecture is not None else "transformer",
         d_model=args.d_model if args.d_model is not None else 128,
         n_layers=args.n_layers if args.n_layers is not None else 2,
         n_heads=args.n_heads if args.n_heads is not None else 4,

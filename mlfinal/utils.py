@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import numpy as np
+import random
 try:
     from sklearn.manifold import TSNE
     _HAS_SKLEARN = True
@@ -13,7 +14,6 @@ except Exception:
     _HAS_SKLEARN = False
 
 def set_seed(seed: int):
-    import random
     random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
@@ -22,20 +22,15 @@ def _build_vis_suffix(cfg=None) -> str:
     """
     构建可视化文件后缀，包含所有相关参数信息
     
-    格式: op_pX__train_ratio_Y__architecture__optimizer__note__step_Z
-    例如: mod_add_p97__train_ratio_0.4__transformer__adamw__exp1__step_3000
-    
-    Args:
-        cfg: 配置对象，包含所有参数信息
-    
-    Returns:
-        文件名后缀字符串，或空字符串（如果 cfg 为 None）
+    格式: op_pX__k_Y__train_ratio_Z__architecture__optimizer__[note__]
+    例如: mod_add_p97__k_2__train_ratio_0.4__transformer__adamw__exp1
     """
     if cfg is None:
         return ""
     
-    # 构建基础信息：操作和模数
-    op_info = f"{cfg.op}_p{cfg.p}"
+    # 构建基础信息：操作、模数和元数
+    k = getattr(cfg, 'k', 2)
+    op_info = f"{cfg.op}_p{cfg.p}__k_{k}"
     
     # 构建训练比例信息
     train_ratio_info = f"train_ratio_{cfg.train_ratio}"
@@ -57,13 +52,13 @@ def _build_vis_suffix(cfg=None) -> str:
     return "__" + "__".join(suffix_parts)
 
 
-def _add_step_to_suffix(suffix: str, step: int) -> str:
+def _add_step_to_suffix(suffix: str, step) -> str:
     """
     将步数信息添加到后缀末尾
     
     Args:
         suffix: 已有的后缀
-        step: 当前步数
+        step: 当前步数（可以是整数或字符串如'final'）
     
     Returns:
         添加了步数的后缀
@@ -77,7 +72,7 @@ def plot_training_curves(history: dict, out_dir: str, cfg=None, step=None, note:
     """
     绘制训练曲线（损失和准确率）
     
-    文件名格式: training_curves__op_pX__train_ratio_Y__architecture__optimizer__[note__]step_Z.png
+    文件名格式: training_curves__op_pX__k_Y__train_ratio_Z__architecture__optimizer__[note__]step_S.png
     
     Args:
         history: 包含训练历史的字典
@@ -85,9 +80,12 @@ def plot_training_curves(history: dict, out_dir: str, cfg=None, step=None, note:
         cfg: 配置对象，用于生成文件名后缀
         step: 当前步数（可选，用于动态保存）
         note: 额外的注释信息（已弃用，由 cfg.plot_note 提供）
+    
+    Returns:
+        保存文件的路径，如果未保存则返回None
     """
     if len(history['steps']) == 0:
-        return
+        return None
     
     # 构建文件名后缀
     vis_suffix = _build_vis_suffix(cfg)
@@ -122,13 +120,14 @@ def plot_training_curves(history: dict, out_dir: str, cfg=None, step=None, note:
     plt.savefig(filepath, dpi=150, bbox_inches='tight')
     plt.close()
     print(f"保存训练曲线: {filepath}")
+    return filepath
 
 def save_tsne_head(model: nn.Module, out_dir: str, cfg=None, perplexity: float = 30, 
                    n_iter: int = 1000, note: str = ""):
     """
     使用 t-SNE 可视化输出层权重
     
-    文件名格式: tsne_head__op_pX__train_ratio_Y__architecture__optimizer__[note__]step_Z.png
+    文件名格式: tsne_head__op_pX__k_Y__train_ratio_Z__architecture__optimizer__[note].png
     
     Args:
         model: 训练好的模型
@@ -137,10 +136,13 @@ def save_tsne_head(model: nn.Module, out_dir: str, cfg=None, perplexity: float =
         perplexity: t-SNE perplexity 参数
         n_iter: t-SNE 迭代次数
         note: 额外的注释信息（已弃用，由 cfg.plot_note 提供）
+    
+    Returns:
+        保存文件的路径，如果未保存则返回None
     """
     if not _HAS_SKLEARN:
         print("警告: sklearn 未安装，跳过 t-SNE 可视化")
-        return
+        return None
     
     # 构建文件名后缀
     vis_suffix = _build_vis_suffix(cfg)
@@ -172,6 +174,7 @@ def save_tsne_head(model: nn.Module, out_dir: str, cfg=None, perplexity: float =
     plt.savefig(filepath, dpi=150, bbox_inches='tight')
     plt.close()
     print(f"保存 t-SNE 可视化: {filepath}")
+    return filepath
 
 def build_optimizer(model: nn.Module, cfg):
     """
