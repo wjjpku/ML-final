@@ -6,6 +6,7 @@ class Config:
     p: int = 97
     op: str = "mod_add"
     train_ratio: float = 0.4
+    architecture: str = "transformer"  # 新增：模型架构
     d_model: int = 128
     n_layers: int = 2
     n_heads: int = 4
