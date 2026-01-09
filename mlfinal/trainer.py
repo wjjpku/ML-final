@@ -129,6 +129,6 @@ def train_loop(cfg: Config):
         plot_path = plot_training_curves(history, cfg.out_dir, cfg, step='final', note=cfg.plot_note)
         print(f"训练曲线已保存: {plot_path}")
     if cfg.tsne:
-        path = save_tsne_head(model, cfg.out_dir, cfg.tsne_perplexity, cfg.tsne_n_iter)
+        path = save_tsne_head(model, cfg.out_dir, cfg.tsne_perplexity, cfg.tsne_n_iter, note=cfg.plot_note)
         if path:
             print(f"t-SNE 嵌入已保存: {path}")
