@@ -4,7 +4,7 @@ import torch.nn as nn
 from dataclasses import asdict
 from .config import Config
 from .data import build_dataset
-from .model import DecoderOnlyTransformer
+from .architectures import get_model, DecoderOnlyTransformer  # 统一从 architectures 导入
 from .utils import set_seed, plot_training_curves, build_optimizer, save_tsne_head
 
 def train_loop(cfg: Config):
@@ -15,7 +15,10 @@ def train_loop(cfg: Config):
         cfg.batch_size = min(512, max(1, train_data.size(0) // 2))
     if cfg.full_batch:
         cfg.batch_size = train_data.size(0)
-    model = DecoderOnlyTransformer(
+    
+    # 使用工厂函数创建模型，支持多种架构
+    model = get_model(
+        architecture=cfg.architecture,
         vocab_size=vocab.vocab_size,
         d_model=cfg.d_model,
         n_layers=cfg.n_layers,
@@ -23,10 +26,12 @@ def train_loop(cfg: Config):
         dropout=cfg.dropout,
         seq_len=5,
     ).to(cfg.device)
+    
     opt = build_optimizer(model, cfg)
     criterion = nn.CrossEntropyLoss()
     total_params = sum(p.numel() for p in model.parameters())
-    print(f"\n模型参数总数: {total_params:,}")
+    print(f"\n模型架构: {cfg.architecture}")
+    print(f"模型参数总数: {total_params:,}")
     print(f"词表大小: {vocab.vocab_size}")
     print(f"训练集大小: {train_data.size(0):,}, 验证集大小: {val_data.size(0):,}\n")
     def lr_for_step(step: int) -> float:
@@ -128,6 +133,6 @@ def train_loop(cfg: Config):
         if plot_path:
             print(f"训练曲线已保存: {plot_path}")
     if cfg.tsne:
-        path = save_tsne_head(model, cfg.out_dir, cfg.tsne_perplexity, cfg.tsne_n_iter)
+        path = save_tsne_head(model, cfg.out_dir, cfg.tsne_perplexity, cfg.tsne_n_iter, note=cfg.plot_note)
         if path:
             print(f"t-SNE 嵌入已保存: {path}")

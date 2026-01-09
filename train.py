@@ -4,12 +4,16 @@ import argparse
 from dataclasses import asdict
 from mlfinal.config import Config
 from mlfinal.trainer import train_loop
+from mlfinal.architectures import get_supported_architectures
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--p', type=int)
     parser.add_argument('--op', type=str)
     parser.add_argument('--train-ratio', type=float)
+    parser.add_argument('--architecture', type=str, 
+                        choices=get_supported_architectures(),
+                        help='模型架构: transformer, mlp, lstm, gru')  # 新增
     parser.add_argument('--d-model', type=int)
     parser.add_argument('--n-layers', type=int)
     parser.add_argument('--n-heads', type=int)
@@ -39,6 +43,7 @@ def main():
         p=args.p if args.p is not None else 97,
         op=args.op if args.op is not None else "mod_add",
         train_ratio=args.train_ratio if args.train_ratio is not None else 0.4,
+        architecture=args.architecture if args.architecture is not None else "transformer",  # 新增
         d_model=args.d_model if args.d_model is not None else 128,
         n_layers=args.n_layers if args.n_layers is not None else 2,
         n_heads=args.n_heads if args.n_heads is not None else 4,
@@ -63,10 +68,8 @@ def main():
         seed=args.seed if args.seed is not None else 42,
         out_dir=args.out_dir if args.out_dir is not None else "outputs",
     )
-    print("配置:")
-    for k, v in asdict(cfg).items():
-        print(f"  {k}: {v}")
     train_loop(cfg)
 
 if __name__ == "__main__":
     main()
+
