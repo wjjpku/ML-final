@@ -34,6 +34,7 @@ def main():
     # 优化器参数
     parser.add_argument('--optimizer', type=str, default=None, help='优化器类型，默认adamw')
     parser.add_argument('--lr', type=float, default=None, help='学习率，默认1e-3')
+    parser.add_argument('--momentum', type=float, default=None, help='Momentum参数，默认0.9')
     parser.add_argument('--weight-decay', type=float, default=None, help='权重衰减，默认1')
     parser.add_argument('--warmup-steps', type=int, default=None, help='预热步数，默认100')
     
@@ -82,6 +83,7 @@ def main():
         dropout=args.dropout if args.dropout is not None else 0.1,
         optimizer=args.optimizer if args.optimizer is not None else "adamw",
         lr=args.lr if args.lr is not None else 1e-3,
+        momentum=args.momentum if args.momentum is not None else 0.9,
         weight_decay=args.weight_decay if args.weight_decay is not None else 1.0,
         warmup_steps=args.warmup_steps if args.warmup_steps is not None else 100,
         steps=args.steps if args.steps is not None else 20000,

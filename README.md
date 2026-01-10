@@ -125,6 +125,22 @@
   - 学习率变体：`python train.py --op mod_add --lr 3e-4` 或 `--lr 3e-3`
 - 依赖安装：`pip install torch matplotlib`，可选 t-SNE：`pip install scikit-learn`
 
+### **命令行参数详解**
+| 参数 | 类型 | 默认值 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `--p` | int | 97 | 模数 |
+| `--op` | str | mod_add | 运算类型 |
+| `--train-ratio` | float | 0.4 | 训练集比例 |
+| `--optimizer` | str | adamw | 优化器 (adamw, adam, sgd, rmsprop) |
+| `--lr` | float | 1e-3 | 学习率 |
+| `--momentum` | float | 0.9 | 动量 (仅 SGD/RMSprop) |
+| `--weight-decay` | float | 1.0 | 权重衰减 |
+| `--dropout` | float | 0.1 | Dropout 比例 |
+| `--steps` | int | 20000 | 训练总步数 |
+| `--plot-interval` | int | 0 | 绘图间隔 (0表示不定期绘图) |
+| `--plot-note` | str | "" | 绘图文件名后缀注释 |
+| `--enable-visualization` | flag | True | 启用 Loss/Acc 曲线绘制 |
+
 ### **Jupyter Notebook**
 - 可视化与汇总：打开 `experiments.ipynb`，按顺序运行各单元以：
   - 运行多种运算的短训练并绘制 Loss/Accuracy 曲线
@@ -139,7 +155,7 @@
 ### **关键超参数**
 - 数据：`--p`、`--train-ratio`、`--op`
 - 模型：`--d-model`、`--n-layers`、`--n-heads`、`--dropout`
-- 优化器：`--optimizer adam|adamw`、`--lr`、`--weight-decay`、`--warmup-steps`
+- 优化器：`--optimizer adam|adamw|sgd|rmsprop`、`--lr`、`--weight-decay`、`--momentum`、`--warmup-steps`
 - 训练：`--steps`、`--batch-size`、`--full-batch`、`--eval-interval`、`--target-val-acc`
 - 正则与噪声：`--grad-noise-std`、`--weight-noise-std`、`--decay-to-init --decay-to-init-lambda`
 - 可视化：`--tsne` 或 `--no-tsne`

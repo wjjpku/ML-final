@@ -185,7 +185,14 @@ def build_optimizer(model, cfg):
             model.parameters(),
             lr=cfg.lr,
             weight_decay=cfg.weight_decay,
-            momentum=0.9
+            momentum=cfg.momentum
+        )
+    elif optimizer_type == 'rmsprop':
+        optimizer = torch.optim.RMSprop(
+            model.parameters(),
+            lr=cfg.lr,
+            weight_decay=cfg.weight_decay,
+            momentum=cfg.momentum
         )
     else:
         raise ValueError(f"不支持的优化器类型: {optimizer_type}")
