@@ -141,11 +141,6 @@
 | `--plot-note` | str | "" | 绘图文件名后缀注释 |
 | `--enable-visualization` | flag | True | 启用 Loss/Acc 曲线绘制 |
 
-### **Jupyter Notebook**
-- 可视化与汇总：打开 `experiments.ipynb`，按顺序运行各单元以：
-  - 运行多种运算的短训练并绘制 Loss/Accuracy 曲线
-  - 进行输出层权重的 t-SNE 可视化（如安装了 `scikit-learn`）
-  - 在项目根目录启动可直接引用模块 `mlfinal/*`
 
 ### **支持的运算**
 - 模运算（`p=97`）：加、减、除、奇偶分支、若干多项式组合（.\mlfinal\data.py:28）
@@ -171,3 +166,24 @@
 - OpenMP 冲突：如出现 `libiomp5md.dll` 重复初始化，代码已设置环境变量自动绕过（`mlfinal/utils.py`）；仍建议统一依赖版本。
 - t-SNE 依赖：未安装 `scikit-learn` 时自动跳过并正常训练。
 - `S5` 数据集规模：词表大小 120，样本 14400，训练更慢；建议提高步数与合适超参。
+
+### **高级实验与图表绘制**
+针对需要验证不同优化器在不同训练比例下的表现（复现 Figure 2 等），提供了以下自动化脚本：
+
+1.  **运行矩阵实验**：
+    - 脚本：`run_matrix_experiments.py`
+    - 功能：自动运行 AdamW (不同beta1), SGD, SGD+Momentum, RMSprop 在 7 种训练比例下的实验。
+    - 输出：生成 `experiment_matrix_results.csv`汇总所有实验结果。
+    - 用法：`python run_matrix_experiments.py`
+
+2.  **绘制图表 (Python)**：
+    - 脚本：`plot_matrix_results.py`
+    - 功能：读取 CSV 结果，生成包含子图的对比大图 (`optimizer_comparison.png`) 和汇总对比图 (`all_optimizers_comparison.png`)。
+    - 用法：`python plot_matrix_results.py`
+
+3.  **绘制图表 (MATLAB)**：
+    - 脚本：`plot_matrix_results.m`
+    - 功能：同上，生成 MATLAB 风格的高质量图表。
+    - 用法：在 MATLAB 中运行此脚本即可。
+
+### **Jupyter Notebook**

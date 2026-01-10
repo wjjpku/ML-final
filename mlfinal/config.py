@@ -15,7 +15,9 @@ class Config:
     lr: float = 1e-3
     weight_decay: float = 1
     optimizer: str = "adamw"
-    momentum: float = 0.9  # 新增：Momentum参数（用于SGD等）
+    momentum: float = None  # 针对 SGD/RMSprop 的动量，或 AdamW 的 beta1
+    beta1: float = 0.9      # Adam/AdamW 的 beta1
+    beta2: float = 0.999    # Adam/AdamW 的 beta2
     warmup_steps: int = 10
     steps: int = 100000
     batch_size: int = 0

@@ -245,7 +245,14 @@ def train_loop(cfg: Config):
                 print(f"CSV日志路径: {csv_path}")
                 print(f"{'='*80}\n")
                 
-                return
+                return {
+                    'status': 'success',
+                    'step': step + 1,
+                    'train_acc': acc_tr,
+                    'val_acc': acc_val,
+                    'loss': loss_val,
+                    'data_dir': data_dir
+                }
     
     # 训练结束（未达到目标）
     acc_tr, loss_tr = evaluate(train_data, max_samples=4096)
@@ -272,3 +279,12 @@ def train_loop(cfg: Config):
     print(f"数据已保存到: {data_dir}")
     print(f"CSV日志路径: {csv_path}")
     print(f"{'='*80}\n")
+
+    return {
+        'status': 'finished',
+        'step': cfg.steps,
+        'train_acc': acc_tr,
+        'val_acc': acc_val,
+        'loss': loss_val,
+        'data_dir': data_dir
+    }

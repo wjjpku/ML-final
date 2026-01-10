@@ -83,7 +83,9 @@ def main():
         dropout=args.dropout if args.dropout is not None else 0.1,
         optimizer=args.optimizer if args.optimizer is not None else "adamw",
         lr=args.lr if args.lr is not None else 1e-3,
-        momentum=args.momentum if args.momentum is not None else 0.9,
+        momentum=args.momentum, # 默认为 None，在 utils.py 中处理
+        beta1=args.beta1 if args.beta1 is not None else 0.9,
+        beta2=args.beta2 if args.beta2 is not None else 0.999,
         weight_decay=args.weight_decay if args.weight_decay is not None else 1.0,
         warmup_steps=args.warmup_steps if args.warmup_steps is not None else 100,
         steps=args.steps if args.steps is not None else 20000,

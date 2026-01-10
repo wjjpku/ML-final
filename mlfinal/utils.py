@@ -141,30 +141,45 @@ def build_optimizer(model, cfg):
     optimizer_type = cfg.optimizer.lower()
     
     if optimizer_type == 'adamw':
+        # 如果设置了 momentum 参数，且没有显式设置 beta1（即 beta1 为默认值 0.9），则使用 momentum 作为 beta1
+        # 这允许用户通过 --momentum 参数控制 AdamW 的 beta1
+        beta1 = cfg.beta1
+        if cfg.momentum is not None and abs(cfg.beta1 - 0.9) < 1e-6:
+            beta1 = cfg.momentum
+            
         optimizer = torch.optim.AdamW(
             model.parameters(),
             lr=cfg.lr,
-            weight_decay=cfg.weight_decay
+            weight_decay=cfg.weight_decay,
+            betas=(beta1, cfg.beta2)
         )
     elif optimizer_type == 'adam':
+        # 同上
+        beta1 = cfg.beta1
+        if cfg.momentum is not None and abs(cfg.beta1 - 0.9) < 1e-6:
+            beta1 = cfg.momentum
+            
         optimizer = torch.optim.Adam(
             model.parameters(),
             lr=cfg.lr,
-            weight_decay=cfg.weight_decay
+            weight_decay=cfg.weight_decay,
+            betas=(beta1, cfg.beta2)
         )
     elif optimizer_type == 'sgd':
+        momentum = cfg.momentum if cfg.momentum is not None else 0.9
         optimizer = torch.optim.SGD(
             model.parameters(),
             lr=cfg.lr,
             weight_decay=cfg.weight_decay,
-            momentum=cfg.momentum
+            momentum=momentum
         )
     elif optimizer_type == 'rmsprop':
+        momentum = cfg.momentum if cfg.momentum is not None else 0.0
         optimizer = torch.optim.RMSprop(
             model.parameters(),
             lr=cfg.lr,
             weight_decay=cfg.weight_decay,
-            momentum=cfg.momentum
+            momentum=momentum
         )
     else:
         raise ValueError(f"不支持的优化器类型: {optimizer_type}")
